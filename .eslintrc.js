@@ -1,20 +1,25 @@
 module.exports = {
+	root: true,
 	env: {
-		browser: true,
-		es2021: true,
+		es6: true,
 		node: true,
 	},
+	plugins: ['@typescript-eslint'],
+	parser: '@typescript-eslint/parser',
 	parserOptions: {
-		ecmaVersion: 12,
+		ecmaVersion: 'latest',
+		sourceType: 'module',
 	},
-	extends: [
-		'prettier',
-		'eslint:recommended',
-		'plugin:vue/vue3-essential',
-		'plugin:vue/vue3-recommended',
-		'plugin:vue/vue3-strongly-recommended',
-	],
+	extends: ['prettier', 'eslint:recommended', 'plugin:@typescript-eslint/recommended'],
+	ignorePatterns: ['node_modules/', 'dist/', 'coverage/', 'src/**/*.test.ts'],
 	rules: {
-		'vue/no-unused-vars': 'error',
+		'no-tabs': 0,
+		'no-unused-expressions': 1,
+		indent: [1, 'tab', { SwitchCase: 1 }],
+		'@typescript-eslint/no-unused-vars': 1,
+		'@typescript-eslint/consistent-type-imports': 'error',
+		'@typescript-eslint/explicit-function-return-type': 'error',
+		'no-console': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
+		'no-debugger': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
 	},
 };

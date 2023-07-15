@@ -1,32 +1,43 @@
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct Email {
-    pub to: String,
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EmailModel {
     pub from: String,
-    pub body: String,
+    pub to: String,
     pub subject: String,
+    pub body: String,
 }
 
-impl Email {
-    pub fn new(to: String, from: String, body: String, subject: String) -> Email {
-        Email {
-            to,
+impl EmailModel {
+    pub fn new(from: String, to: String, subject: String, body: String) -> EmailModel {
+        EmailModel {
             from,
-            body,
+            to,
             subject,
+            body,
         }
     }
 }
 
-pub fn fetch_emails(port: u16, domain: &str, email: &str, password: &str) -> Vec<Email> {
+pub fn fetch_emails(
+    port: u16,
+    domain: &str,
+    email: &str,
+    password: &str,
+    sequence: &str,
+    mailbox: &str,
+) -> Vec<EmailModel> {
+    println!("Fetching emails from {}...", domain);
+
     let tls = native_tls::TlsConnector::builder().build().unwrap();
     let client = imap::connect((domain, port), domain, &tls).unwrap();
 
     let mut imap_session = client.login(email, password).unwrap();
 
-    imap_session.select("INBOX").unwrap();
-    let messages = imap_session.fetch("1:3", "RFC822").unwrap();
+    imap_session.select(mailbox).unwrap();
+    let messages = imap_session.fetch(sequence, "RFC822").unwrap();
 
-    let mut emails: Vec<Email> = Vec::new();
+    let mut emails: Vec<EmailModel> = Vec::new();
 
     for message in messages.iter() {
         let body = match message.body() {
@@ -70,8 +81,7 @@ pub fn fetch_emails(port: u16, domain: &str, email: &str, password: &str) -> Vec
             None => "".to_string(),
         };
 
-        let email = Email::new(to, from, body, subject);
-        emails.push(email);
+        emails.push(EmailModel::new(from, to, subject, body));
     }
 
     emails

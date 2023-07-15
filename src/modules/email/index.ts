@@ -1,0 +1,1 @@
+export { GetMailsChannel } from './channels';

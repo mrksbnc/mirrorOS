@@ -4,4 +4,18 @@
 	</div>
 </template>
 
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import { onMounted } from 'vue';
+import MirrorOSConfigImpl from './config/config';
+import { GetMailsChannel } from './modules/email/channels';
+
+onMounted(async () => {
+	const result = await new GetMailsChannel().use({
+		port: MirrorOSConfigImpl.sharedInstance.email.outlook.port,
+		host: MirrorOSConfigImpl.sharedInstance.email.outlook.host,
+		auth: MirrorOSConfigImpl.sharedInstance.email.outlook.auth,
+	});
+
+	console.log(result);
+});
+</script>

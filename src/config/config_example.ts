@@ -1,12 +1,11 @@
-import { MirrorOSConfig } from '@/types/mirror_config';
 import { TransportMode } from './traffic_config_helper';
 
 let sharedInstance: MirrorOSConfig | null = null;
 
-export default class ImplMirrorOSConfig implements MirrorOSConfig {
+export default class MirrorOSConfig {
 	public static get sharedInstance(): MirrorOSConfig {
 		if (sharedInstance === null) {
-			sharedInstance = new ImplMirrorOSConfig();
+			sharedInstance = new MirrorOSConfig();
 		}
 		return sharedInstance;
 	}
@@ -25,18 +24,18 @@ export default class ImplMirrorOSConfig implements MirrorOSConfig {
 			lat: '',
 			lon: '',
 		},
-		unit: 'metric' as const,
+		unit: '',
 	};
 
 	public readonly traffic = {
 		baseURL: '',
 		transitBaseUrl: '',
 		transportMode: {
-			car: TransportMode.Car as const,
-			taxi: TransportMode.Taxi as const,
-			bicycle: TransportMode.Bicycle as const,
-			scooter: TransportMode.Scooter as const,
-			transit: TransportMode.Transit as const,
+			car: TransportMode.Car,
+			taxi: TransportMode.Taxi,
+			bicycle: TransportMode.Bicycle,
+			scooter: TransportMode.Scooter,
+			transit: TransportMode.Transit,
 		},
 		origin: {
 			lat: 0,
@@ -49,17 +48,21 @@ export default class ImplMirrorOSConfig implements MirrorOSConfig {
 	};
 
 	public readonly email = {
-		clients: [
-			{
-				port: 0,
-				host: '',
-				secure: false,
-				auth: {
-					id: 0,
-					email: '',
-					password: '',
-				},
+		outlook: {
+			port: 993,
+			host: '',
+			auth: {
+				user: '',
+				password: '',
 			},
-		],
+		},
+		iCloud: {
+			port: 993,
+			host: '',
+			auth: {
+				user: '',
+				password: '',
+			},
+		},
 	};
 }
