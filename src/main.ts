@@ -1,5 +1,8 @@
-import { createApp } from "vue";
-import "./styles.css";
-import App from "./App.vue";
+import './assets/styles/index.scss';
 
-createApp(App).mount("#app");
+import App from './App.vue';
+import { createApp } from 'vue';
+
+const mirrorOS = createApp(App);
+
+mirrorOS.mount('#app');
