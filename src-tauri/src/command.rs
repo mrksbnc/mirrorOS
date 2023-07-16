@@ -34,10 +34,7 @@ pub fn get_emails(
         "Emails fetched successfully".to_string(),
     );
 
-    println!(
-        "get_emails executed successfully! result: {:?}",
-        command_result
-    );
+    println!("get_emails command executed successfully!");
 
     command_result
 }

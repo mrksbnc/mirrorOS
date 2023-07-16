@@ -45,7 +45,7 @@ pub fn fetch_emails(
 
     imap_session.select(mailbox).unwrap();
 
-    let messages = match imap_session.fetch(sequence, "(FLAGS INTERNALDATE RFC822.SIZE ENVELOPE)") {
+    let messages = match imap_session.fetch(sequence, "(FLAGS ENVELOPE)") {
         Ok(m) => {
             match imap_session.run_command("LOGOUT") {
                 Ok(_) => {
@@ -55,11 +55,6 @@ pub fn fetch_emails(
                     println!("Error logging out of IMAP server: {:?}", e);
                 }
             }
-            println!(
-                "Successfully fetched {} emails from {} server!",
-                m.len(),
-                domain
-            );
             m
         }
         Err(e) => {
@@ -68,7 +63,19 @@ pub fn fetch_emails(
         }
     };
 
-    for message in messages.iter() {
+    let unseen_messages = messages
+        .iter()
+        .filter(|m| m.flags().iter().all(|f| f != &imap::types::Flag::Seen))
+        .collect::<Vec<_>>();
+
+    println!(
+        "Successfully fetched {} emails {} unread from {} server!",
+        messages.len(),
+        unseen_messages.len(),
+        domain
+    );
+
+    for message in unseen_messages.iter() {
         if let Some(envelope) = message.envelope() {
             let uuid = match &envelope.message_id {
                 Some(uuid) => std::str::from_utf8(uuid).unwrap().to_string(),
