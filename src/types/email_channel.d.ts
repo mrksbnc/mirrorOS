@@ -1,6 +1,7 @@
 export declare type UseGetEmailsChannelArgs = {
 	port: number;
 	host: string;
+	sequence: string;
 	auth: {
 		user: string;
 		password: string;

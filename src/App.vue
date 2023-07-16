@@ -6,16 +6,14 @@
 
 <script setup lang="ts">
 import { onMounted } from 'vue';
-import MirrorOSConfigImpl from './config/config';
+import MirrorOSConfig from './config/config';
 import { GetMailsChannel } from './modules/email/channels';
 
 onMounted(async () => {
-	const result = await new GetMailsChannel().use({
-		port: MirrorOSConfigImpl.sharedInstance.email.outlook.port,
-		host: MirrorOSConfigImpl.sharedInstance.email.outlook.host,
-		auth: MirrorOSConfigImpl.sharedInstance.email.outlook.auth,
-	});
+	const result = await new GetMailsChannel().use(MirrorOSConfig.sharedInstance.email.iCloud);
+	const result2 = await new GetMailsChannel().use(MirrorOSConfig.sharedInstance.email.outlook);
 
 	console.log(result);
+	console.log(result2);
 });
 </script>
