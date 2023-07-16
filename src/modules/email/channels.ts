@@ -1,14 +1,9 @@
-import {
-	EmailModel,
-	EmailChannelInterface,
-	GetEmailsChannelParams,
-	UseGetEmailsChannelArgs,
-} from '@/types/email_channel';
+import { IpcEvent, IpcChannel } from '@/core';
 import { CommandResult } from '@/types/command_result';
-import { IpcChannel, IpcEvent } from '@/core/ipc_channel';
+import { Email, EmailChannelInterface, GetEmailsChannelParams, UseGetEmailsChannelArgs } from '@/types/email_channel';
 
 export class GetMailsChannel extends IpcChannel implements EmailChannelInterface {
-	async use({ port, host, auth, sequence }: UseGetEmailsChannelArgs): Promise<CommandResult<EmailModel[]>> {
+	async use({ port, host, auth, sequence }: UseGetEmailsChannelArgs): Promise<CommandResult<Email[]>> {
 		const getEmailsChannelParams: GetEmailsChannelParams = {
 			sequence,
 			port: port,
@@ -18,6 +13,6 @@ export class GetMailsChannel extends IpcChannel implements EmailChannelInterface
 			password: auth.password,
 		};
 
-		return await this.invoke<CommandResult<EmailModel[]>>(IpcEvent.GetEmails, getEmailsChannelParams);
+		return await this.invoke<CommandResult<Email[]>>(IpcEvent.EMAIL_GET_UNSEEN, getEmailsChannelParams);
 	}
 }

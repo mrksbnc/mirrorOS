@@ -1,6 +1,6 @@
 import { CommandResult } from './command_result';
 
-export declare type EmailModel = {
+export declare type Email = {
 	uuid: String;
 	from: String;
 	to: String;
@@ -28,5 +28,5 @@ export declare type GetEmailsChannelParams = {
 };
 
 export interface EmailChannelInterface {
-	use({ port, host, auth, sequence }: UseGetEmailsChannelArgs): Promise<CommandResult<EmailModel[]>>;
+	use({ port, host, auth, sequence }: UseGetEmailsChannelArgs): Promise<CommandResult<Email[]>>;
 }
