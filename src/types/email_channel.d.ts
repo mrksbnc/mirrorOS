@@ -20,11 +20,11 @@ export declare type UseGetEmailsChannelArgs = {
 
 export declare type GetEmailsChannelParams = {
 	port: number;
-	domain: string;
 	email: string;
-	password: string;
-	sequence: string;
+	domain: string;
 	mailbox: string;
+	sequence: string;
+	password: string;
 };
 
 export interface EmailChannelInterface {
