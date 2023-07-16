@@ -4,16 +4,14 @@
 mod command;
 mod module;
 
-use log::info;
-
 fn main() {
     let context: tauri::Context<tauri::utils::assets::EmbeddedAssets> = tauri::generate_context!();
-    info!("Tauri context generated successfully");
+    println!("Tauri context generated successfully");
 
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![command::get_emails,])
         .run(context)
         .expect("error while running tauri application");
 
-    info!("mirrorOS started successfully");
+    println!("mirrorOS started successfully");
 }

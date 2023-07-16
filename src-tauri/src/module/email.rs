@@ -2,19 +2,21 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EmailModel {
+    pub uuid: String,
     pub from: String,
     pub to: String,
     pub subject: String,
-    pub body: String,
+    pub created_at: String,
 }
 
 impl EmailModel {
-    pub fn new(from: String, to: String, subject: String, body: String) -> EmailModel {
+    pub fn new(uuid: String, from: String, to: String, subject: String) -> EmailModel {
         EmailModel {
+            uuid,
             from,
             to,
             subject,
-            body,
+            created_at: chrono::Local::now().to_string(),
         }
     }
 }
@@ -27,61 +29,130 @@ pub fn fetch_emails(
     sequence: &str,
     mailbox: &str,
 ) -> Vec<EmailModel> {
-    println!("Fetching emails from {}...", domain);
+    println!("Fetching emails from {} server...", domain);
 
+    let mut emails: Vec<EmailModel> = Vec::new();
     let tls = native_tls::TlsConnector::builder().build().unwrap();
     let client = imap::connect((domain, port), domain, &tls).unwrap();
 
-    let mut imap_session = client.login(email, password).unwrap();
+    let mut imap_session = match client.login(email, password) {
+        Ok(c) => c,
+        Err(e) => {
+            println!("Error logging in to IMAP server: {:?}", e);
+            return emails;
+        }
+    };
 
     imap_session.select(mailbox).unwrap();
-    let messages = imap_session.fetch(sequence, "RFC822").unwrap();
 
-    let mut emails: Vec<EmailModel> = Vec::new();
+    let messages = match imap_session.fetch(sequence, "(FLAGS INTERNALDATE RFC822.SIZE ENVELOPE)") {
+        Ok(m) => {
+            match imap_session.run_command("LOGOUT") {
+                Ok(_) => {
+                    println!("Logged out of {} server!", domain);
+                }
+                Err(e) => {
+                    println!("Error logging out of IMAP server: {:?}", e);
+                }
+            }
+            println!(
+                "Successfully fetched {} emails from {} server!",
+                m.len(),
+                domain
+            );
+            m
+        }
+        Err(e) => {
+            println!("Error fetching emails: {:?}", e);
+            return emails;
+        }
+    };
 
     for message in messages.iter() {
-        let body = match message.body() {
-            Some(body) => std::str::from_utf8(body).unwrap().to_string(),
-            None => "".to_string(),
-        };
-
-        let subject = match message.envelope() {
-            Some(envelope) => match envelope.subject {
-                Some(subject) => std::str::from_utf8(subject).unwrap().to_string(),
+        if let Some(envelope) = message.envelope() {
+            let uuid = match &envelope.message_id {
+                Some(uuid) => std::str::from_utf8(uuid).unwrap().to_string(),
                 None => "".to_string(),
-            },
-            None => "".to_string(),
-        };
+            };
 
-        let to = match message.envelope() {
-            Some(envelope) => match &envelope.to {
-                Some(to) => match to.get(0) {
-                    Some(to) => match to.name {
-                        Some(to) => std::str::from_utf8(to).unwrap().to_string(),
-                        None => "".to_string(),
-                    },
-                    None => "".to_string(),
-                },
+            let from = match &envelope.from {
+                Some(from) => {
+                    let mut sender_str = String::new();
+                    for address in from {
+                        let mailbox = match &address.mailbox {
+                            Some(mailbox) => std::str::from_utf8(mailbox).unwrap().to_string(),
+                            None => "".to_string(),
+                        };
+
+                        let host = match &address.host {
+                            Some(host) => std::str::from_utf8(host).unwrap().to_string(),
+                            None => "".to_string(),
+                        };
+
+                        let iterated_sender_str = format!("{}@{}", mailbox, host);
+
+                        if sender_str.len() > 0 {
+                            sender_str.push_str(", ");
+                            sender_str.push_str(iterated_sender_str.as_str());
+                        } else {
+                            sender_str.push_str(iterated_sender_str.as_str());
+                        }
+                    }
+                    sender_str
+                }
                 None => "".to_string(),
-            },
-            None => "".to_string(),
-        };
+            };
 
-        let from = match message.envelope() {
-            Some(envelope) => match &envelope.from {
-                Some(from) => match from.get(0) {
-                    Some(from) => match from.name {
-                        Some(from) => std::str::from_utf8(from).unwrap().to_string(),
-                        None => "".to_string(),
-                    },
-                    None => "".to_string(),
-                },
+            let to = match &envelope.to {
+                Some(to) => {
+                    let mut recipient_str = String::new();
+                    for address in to {
+                        let mailbox = match &address.mailbox {
+                            Some(mailbox) => std::str::from_utf8(mailbox).unwrap().to_string(),
+                            None => "".to_string(),
+                        };
+
+                        let host = match &address.host {
+                            Some(host) => std::str::from_utf8(host).unwrap().to_string(),
+                            None => "".to_string(),
+                        };
+
+                        let iterated_recipient_str = format!("{}@{}", mailbox, host);
+
+                        if recipient_str.len() > 0 {
+                            recipient_str.push_str(", ");
+                            recipient_str.push_str(iterated_recipient_str.as_str());
+                        } else {
+                            recipient_str.push_str(iterated_recipient_str.as_str());
+                        }
+                    }
+                    recipient_str
+                }
                 None => "".to_string(),
-            },
-            None => "".to_string(),
-        };
+            };
 
-        emails.push(EmailModel::new(from, to, subject, body));
+            let subject = match &envelope.subject {
+                Some(subject) => {
+                    let subj = std::str::from_utf8(subject).unwrap().to_string();
+                    let non_utf8 = String::from("=?UTF-8?");
+                    let tripple_slash = String::from("///");
+                    let tripple_backslash = String::from("\\\\\\");
+                    let clean = subj
+                        .replace(&non_utf8, "")
+                        .replace(&tripple_backslash, "")
+                        .replace(&tripple_slash, "");
+
+                    clean
+                }
+                None => "".to_string(),
+            };
+
+            let email = EmailModel::new(uuid, from, to, subject);
+
+            emails.push(email);
+        } else {
+            println!("Message didn't have an envelope!");
+        }
     }
 
     emails
