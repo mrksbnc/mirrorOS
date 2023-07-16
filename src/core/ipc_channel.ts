@@ -2,7 +2,7 @@ import { invoke } from '@tauri-apps/api';
 import { InvokeArgs } from '@tauri-apps/api/tauri';
 
 export enum IpcEvent {
-	GET_EMAILS = 'get_emails',
+	GetEmails = 'get_emails',
 }
 
 export abstract class IpcChannel {

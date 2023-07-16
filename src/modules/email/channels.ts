@@ -1,9 +1,14 @@
 import { CommandResult } from '@/types/command_result';
 import { IpcChannel, IpcEvent } from '@/core/ipc_channel';
-import { GetEmailsChannelParams, UseGetEmailsChannelArgs } from '@/types/email_channel';
+import {
+	EmailChannelInterface,
+	EmailModel,
+	GetEmailsChannelParams,
+	UseGetEmailsChannelArgs,
+} from '@/types/email_channel';
 
-export class GetMailsChannel extends IpcChannel {
-	async use({ port, host, auth, sequence }: UseGetEmailsChannelArgs): Promise<CommandResult<boolean>> {
+export class GetMailsChannel extends IpcChannel implements EmailChannelInterface {
+	async use({ port, host, auth, sequence }: UseGetEmailsChannelArgs): Promise<CommandResult<EmailModel[]>> {
 		const getEmailsChannelParams: GetEmailsChannelParams = {
 			port: port,
 			domain: host,
@@ -13,9 +18,7 @@ export class GetMailsChannel extends IpcChannel {
 			mailbox: 'INBOX',
 		};
 
-		console.log(getEmailsChannelParams);
-
-		return await this.invoke<CommandResult<boolean>>(IpcEvent.GET_EMAILS, {
+		return await this.invoke<CommandResult<EmailModel[]>>(IpcEvent.GetEmails, {
 			port: port,
 			domain: host,
 			email: auth.user,

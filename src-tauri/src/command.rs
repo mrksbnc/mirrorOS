@@ -17,7 +17,7 @@ impl<T> CommandResult<T> {
     }
 }
 
-#[tauri::command()]
+#[tauri::command(async)]
 pub fn get_emails(
     port: u16,
     domain: &str,
@@ -34,7 +34,6 @@ pub fn get_emails(
         "Emails fetched successfully".to_string(),
     );
 
-    println!("get_emails command executed successfully!");
-
+    println!("* get_emails command executed successfully!");
     command_result
 }

@@ -29,7 +29,8 @@ pub fn fetch_emails(
     sequence: &str,
     mailbox: &str,
 ) -> Vec<EmailModel> {
-    println!("Fetching emails from {} server...", domain);
+    println!("--------------------------------------------");
+    println!("* Fetching emails from {} server...", domain);
 
     let mut emails: Vec<EmailModel> = Vec::new();
     let tls = native_tls::TlsConnector::builder().build().unwrap();
@@ -38,7 +39,7 @@ pub fn fetch_emails(
     let mut imap_session = match client.login(email, password) {
         Ok(c) => c,
         Err(e) => {
-            println!("Error logging in to IMAP server: {:?}", e);
+            println!("* Error logging in to IMAP server: {:?}", e);
             return emails;
         }
     };
@@ -49,16 +50,16 @@ pub fn fetch_emails(
         Ok(m) => {
             match imap_session.run_command("LOGOUT") {
                 Ok(_) => {
-                    println!("Logged out of {} server!", domain);
+                    println!("* Logged out of {}...", domain);
                 }
                 Err(e) => {
-                    println!("Error logging out of IMAP server: {:?}", e);
+                    println!("* Error logging out of {} server: {:?}", domain, e);
                 }
             }
             m
         }
         Err(e) => {
-            println!("Error fetching emails: {:?}", e);
+            println!("* Error fetching emails: {:?}", e);
             return emails;
         }
     };
@@ -69,7 +70,7 @@ pub fn fetch_emails(
         .collect::<Vec<_>>();
 
     println!(
-        "Successfully fetched {} emails {} unread from {} server!",
+        "* Successfully fetched {} emails {} unread from {}...!",
         messages.len(),
         unseen_messages.len(),
         domain
@@ -142,12 +143,14 @@ pub fn fetch_emails(
                 Some(subject) => {
                     let subj = std::str::from_utf8(subject).unwrap().to_string();
                     let non_utf8 = String::from("=?UTF-8?");
+                    let equals = String::from("=");
                     let tripple_slash = String::from("///");
                     let tripple_backslash = String::from("\\\\\\");
                     let clean = subj
                         .replace(&non_utf8, "")
                         .replace(&tripple_backslash, "")
-                        .replace(&tripple_slash, "");
+                        .replace(&tripple_slash, "")
+                        .replace(&equals, " ");
 
                     clean
                 }
@@ -158,7 +161,7 @@ pub fn fetch_emails(
 
             emails.push(email);
         } else {
-            println!("Message didn't have an envelope!");
+            println!("* Message didn't have an envelope!");
         }
     }
 
