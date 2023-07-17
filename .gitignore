@@ -25,6 +25,4 @@ dist-ssr
 
 
 # Custom configuration files
-
-config.ts
-!config_example.ts
+config.rs

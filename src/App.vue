@@ -13,15 +13,14 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
-import MirrorOSConfig from './config/config';
-import { GetMailsChannel } from './modules/email/channels';
+import { GetUnseenMailsChannel } from './modules/email/channels';
 
 const result = ref();
 const result2 = ref();
 
 onMounted(async () => {
-	result.value = await new GetMailsChannel().use(MirrorOSConfig.sharedInstance.email.iCloud);
-	result2.value = ref(await new GetMailsChannel().use(MirrorOSConfig.sharedInstance.email.outlook));
+	result.value = ref(await new GetUnseenMailsChannel().use());
+	result2.value = ref(await new GetUnseenMailsChannel().use());
 
 	console.log(result);
 	console.log(result2);

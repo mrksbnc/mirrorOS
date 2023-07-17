@@ -1,18 +1,21 @@
-use crate::models::{command::CommandResult, email::Email};
+use crate::models::command_result::CommandResult;
+
+use super::model::Email;
+
 use native_tls::TlsStream;
 use std::net::TcpStream;
 
 #[derive(Debug)]
-pub struct ImapClient {
+pub struct Imap {
     pub client: imap::Client<TlsStream<TcpStream>>,
 }
 
-impl ImapClient {
+impl Imap {
     pub fn new(domain: &str, port: u16) -> Self {
         let tls = native_tls::TlsConnector::builder().build().unwrap();
         let client = imap::connect((domain, port), domain, &tls).unwrap();
 
-        ImapClient { client }
+        Imap { client }
     }
 
     pub fn fetch_unseen(
@@ -22,14 +25,13 @@ impl ImapClient {
         sequence: &str,
         mailbox: &str,
     ) -> CommandResult<Vec<Email>> {
-        println!("--------------------------------------------");
-
         let mut emails: Vec<Email> = Vec::new();
 
         let mut imap_session = match self.client.login(email, password) {
             Ok(c) => c,
             Err(e) => {
-                println!("* Error logging in to IMAP server: {:?}", e);
+                log::error!("Error logging in to IMAP server: {:?}", e);
+
                 return CommandResult::new(
                     false,
                     None,
@@ -43,7 +45,8 @@ impl ImapClient {
         let uuid_collection = match imap_session.uid_fetch(sequence, "(FLAGS ENVELOPE)") {
             Ok(m) => m,
             Err(e) => {
-                println!("* Error fetching emails: {:?}", e);
+                log::error!("Error fetching emails: {:?}", e);
+
                 return CommandResult::new(false, None, "Error fetching emails".to_string());
             }
         };
@@ -54,7 +57,8 @@ impl ImapClient {
             .collect::<Vec<_>>();
 
         if unseen_uuid_collection.len() == 0 {
-            println!("* No unseen messages were found...");
+            log::info!("No unseen messages were found");
+
             return CommandResult::new(true, None, "No unseen messages were found".to_string());
         }
 
@@ -74,18 +78,19 @@ impl ImapClient {
             }
         }
 
-        println!(
-            "* {} unseen messages were found out of {} total messages...",
+        log::info!(
+            "{} unseen messages were found out of {} total messages",
             uuid_collection.len(),
             unseen_uuid_collection.len(),
         );
 
-        println!("uuid set {}", uid_set.len());
+        log::info!("uuid set {}", uid_set.len());
 
         let messages = match imap_session.uid_fetch(uid_set, "(FLAGS ENVELOPE)") {
             Ok(m) => m,
             Err(e) => {
-                println!("* Error fetching emails: {:?}", e);
+                log::error!("Error fetching emails: {:?}", e);
+
                 return CommandResult::new(false, None, "Error fetching emails".to_string());
             }
         };
@@ -95,8 +100,8 @@ impl ImapClient {
             .filter(|m| m.flags().iter().all(|f| f != &imap::types::Flag::Seen))
             .collect::<Vec<_>>();
 
-        println!(
-            "* Successfully fetched {} emails {} unread from IMAP server...",
+        log::info!(
+            "Successfully fetched {} emails {} unread from IMAP server",
             messages.len(),
             unseen_messages.len(),
         );
@@ -186,7 +191,7 @@ impl ImapClient {
 
                 emails.push(email);
             } else {
-                println!("* Message didn't have an envelope!");
+                log::info!("Message didn't have an envelope!");
             }
         }
 

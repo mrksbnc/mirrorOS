@@ -1,1 +1,1 @@
-export { GetMailsChannel } from './channels';
+export { GetUnseenMailsChannel } from './channels';
